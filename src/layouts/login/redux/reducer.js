@@ -1,12 +1,13 @@
 import { LOGIN, SET_FORM_LOGIN } from "../../../redux/type";
-
+const local = localStorage.getItem('auth')
+// console.log(local)
 // initial state
 const initialAuth = {
-    check : false,
+    check : local ? local.token : false,
     data : {
-        username: 'gandhi',
-        token: 'test',
-        role: 'LAGI',
+        username: null,
+        token: null,
+        role: null,
     }
 }
 

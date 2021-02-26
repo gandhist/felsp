@@ -1,5 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router";
 import "../../assets/css/login.css";
 import { setFormLogin  } from "./redux";
 
@@ -12,9 +13,11 @@ const Login = () => {
   const dispatch = useDispatch();
   
   const stateLogin = useSelector(state => state.LoginReducer);
+  const history = useHistory();
   
   const handleLogin = () => {
     console.log(stateLogin)
+    history.push("/peserta/data-peserta")
   }
 
   // handle on form change

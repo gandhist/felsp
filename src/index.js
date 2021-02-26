@@ -31,15 +31,25 @@ import NoMatch from "./layouts/NoMatch";
 import AdminLayout from "layouts/Admin.js";
 import { Provider } from "react-redux";
 import {store} from './redux';
+import Authenticated from "middleware/Authenticated";
 
 ReactDOM.render(
   <Provider store={store}>
     <BrowserRouter>
       <Switch>
-        <Route path="/peserta" render={(props) => <AdminLayout {...props} />} />
+        
+ {/* protected routes */}
+        <Route path="/peserta" render={(props) => <Authenticated><AdminLayout {...props} /></Authenticated>} />
         {/* <Redirect from="/" to="/peserta/dashboard" /> */}
         <Route path="/login" component={Login} />
         <Route path="/" component={Home} />
+
+       
+
+        {/* <Authenticated>
+          <Route path="/peserta" render={(props) => <AdminLayout {...props} />} />
+        </Authenticated> */}
+        
         <Route path="*">
               <NoMatch />
         </Route>
