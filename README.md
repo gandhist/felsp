@@ -1,6 +1,7 @@
 Front end peserta
 
-todo list:
+TODO list:
 - api authentication
 - middleware
+- migrating vclass
 - update data peserta

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router";
 import "../../assets/css/login.css";
 import { setFormLogin  } from "./redux";
+import { useForm } from "react-hook-form";
 
 
 
@@ -14,10 +15,13 @@ const Login = () => {
   
   const stateLogin = useSelector(state => state.LoginReducer);
   const history = useHistory();
-  
-  const handleLogin = () => {
-    console.log(stateLogin)
-    history.push("/peserta/data-peserta")
+  const { register, handleSubmit, watch, errors,  } = useForm();
+  // console.log('watching username : ',watch('username'))
+  // console.log('error: ',errors)
+  const handleLogin = (data) => {
+    // console.log('ini data dari form',data)
+    // console.log('ini state',stateLogin)
+    history.push("/peserta/dashboard")
   }
 
   // handle on form change
@@ -72,7 +76,7 @@ const Login = () => {
                 <div className="card">
                   <div className="card-header">Login</div>
                   <div className="card-body">
-                    <form>
+                    <form onSubmit={handleSubmit(handleLogin)} >
                       <div className="form-group row">
                         <label
                           htmlFor="email_address"
@@ -84,12 +88,20 @@ const Login = () => {
                           <input
                             type="text"
                             id="email_address"
-                            className="form-control"
+                            className={`form-control ${errors.username && 'is-invalid' }`}
                             name="username"
-                            required
-                            value={stateLogin.username}
+                            defaultValue={stateLogin.username}
                             onChange={e => handleOnChange(e)}
+                            ref={register({required: true, pattern: /^[a-zA-Z0-9]+@+[a-zA-Z0-9]+.+[A-z]/})}
                           />
+                          {errors.username?.type === "required" && 
+                          <span className="invalid-feedback">
+                              <strong>Username tidak boleh kosong</strong>
+                          </span>}
+                          {errors.username?.type === "pattern" && 
+                          <span className="invalid-feedback">
+                              <strong>Format email tidak valid</strong>
+                          </span>}
                         </div>
                       </div>
                       <div className="form-group row">
@@ -103,12 +115,16 @@ const Login = () => {
                           <input
                             type="password"
                             id="password"
-                            className="form-control"
+                            className={`form-control ${errors.password && 'is-invalid' }`}
                             name="password"
-                            required
-                            value={stateLogin.password}
+                            defaultValue={stateLogin.password}
                             onChange={e => handleOnChange(e)}
+                            ref={register({required: true})}
                           />
+                          {errors.password?.type === "required" && 
+                          <span className="invalid-feedback">
+                              <strong>Password tidak boleh kosong</strong>
+                          </span>}
                         </div>
                       </div>
                       <div className="form-group row">
@@ -122,9 +138,10 @@ const Login = () => {
                         </div>
                       </div>
                       <div className="col-md-6 offset-md-4">
-                        <button type="button" className="btn btn-primary" onClick={handleLogin}>
+                        <input value="Login" className="btn btn-primary" type="submit" />
+                        {/* <button type="button" className="btn btn-primary" onClick={handleLogin}>
                           Login
-                        </button>
+                        </button> */}
                       </div>
                     </form>
                   </div>
