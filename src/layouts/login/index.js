@@ -5,7 +5,8 @@ import "../../assets/css/login.css";
 import { setFormLogin, setAuth  } from "./redux";
 import { useForm } from "react-hook-form";
 import { BASE_URL } from '../../api';
-
+import { Link } from "react-router-dom";
+import { AiOutlineLogin } from "react-icons/ai";
 
 
 
@@ -20,6 +21,7 @@ const Login = () => {
   // console.log('watching username : ',watch('username'))
   // console.log('error: ',errors)
   const handleLogin = async () => {
+    dispatch(setFormLogin('isLoading', true));
     await fetch(`${BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,6 +38,7 @@ const Login = () => {
             history.push("/peserta/dashboard")
             break;
         }
+        dispatch(setFormLogin('isLoading', false));
       })
     // console.log('ini data dari form',data)
   }
@@ -70,18 +73,19 @@ const Login = () => {
               className="collapse navbar-collapse"
               id="navbarSupportedContent"
             >
-              {/* <ul className="navbar-nav ml-auto">
-                <li className="nav-item">
+              <ul className="navbar-nav ml-auto">
+                {/* <li className="nav-item">
                   <a className="nav-link" href="#">
                     Login
                   </a>
-                </li>
+                </li> */}
                 <li className="nav-item">
-                  <a className="nav-link" href="#">
+                  <Link className="nav-link" to='/register'>Register</Link>
+                  {/* <a className="nav-link" href="#">
                     Register
-                  </a>
+                  </a> */}
                 </li>
-              </ul> */}
+              </ul>
             </div>
           </div>
         </nav>
@@ -155,10 +159,17 @@ const Login = () => {
                         </div>
                       </div>
                       <div className="col-md-6 offset-md-4">
-                        <input value="Login" className="btn btn-primary" type="submit" />
-                        {/* <button type="button" className="btn btn-primary" onClick={handleLogin}>
-                          Login
-                        </button> */}
+                        {
+                            stateLogin.isLoading ? 
+                            <button className="btn btn-primary" type="button">
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...
+                            </button>
+                            : 
+                            <button className="btn btn-primary" type="submit">
+                              Login <AiOutlineLogin /> 
+                            </button>
+                            // <input value="Login" className="btn btn-primary" type="submit" />
+                        }
                       </div>
                     </form>
                   </div>

@@ -1,3 +1,4 @@
 // type
-import { setAuth, setFormLogin } from "../layouts/login/redux";
-export {setFormLogin, setAuth}
+import { setAuth, setFormLogin } from "../layouts/Login/redux";
+import { setFormRegister } from '../layouts/Register/redux';
+export {setFormLogin, setAuth, setFormRegister}

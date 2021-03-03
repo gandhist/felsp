@@ -25,8 +25,7 @@ import "./assets/css/animate.min.css";
 import "./assets/scss/light-bootstrap-dashboard-react.scss?v=2.0.0";
 import "./assets/css/demo.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import Home from "./layouts/Home";
-import Login from "./layouts/Login";
+import {Login, Register, Home} from "./layouts";
 import NoMatch from "./layouts/NoMatch";
 import AdminLayout from "layouts/Admin.js";
 import { Provider } from "react-redux";
@@ -42,6 +41,7 @@ ReactDOM.render(
         <Route path="/peserta" render={(props) => <Authenticated><AdminLayout {...props} /></Authenticated>} />
         {/* <Redirect from="/" to="/peserta/dashboard" /> */}
         <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
         <Route path="/" component={Home} />
 
        
