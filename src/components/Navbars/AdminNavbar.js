@@ -18,10 +18,20 @@
 import React, { Component } from "react";
 import { useLocation } from "react-router-dom";
 import { Navbar, Container, Nav, Dropdown, Button } from "react-bootstrap";
+import { useHistory } from "react-router";
+import { useDispatch } from "react-redux";
+import { setAuth  } from "../../redux";
+import { BASE_URL } from '../../api';
+
 
 import routes from "routes.js";
 
 function Header() {
+  const dispatch = useDispatch();
+  const localAuth = JSON.parse(localStorage.getItem('p3sAuth'));
+
+  const history = useHistory();
+
   const location = useLocation();
   const mobileSidebarToggle = (e) => {
     e.preventDefault();
@@ -43,6 +53,48 @@ function Header() {
     }
     return "Brand";
   };
+
+  // handle logout
+  const handleLogout = async (e) => {
+    e.preventDefault()
+    await fetch(`${BASE_URL}/logout`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization' : `Bearer ${localAuth.access_token}` },
+      body: JSON.stringify({username: localAuth.user.username})
+    }).then(res => res.json()).then((data) => {
+      let status_code = data.meta.code;
+      switch (status_code) {
+        case 200:
+          localStorage.clear()
+          const dataRev = {
+            access_token: null,
+            token_type: null,
+            user: {
+                created_at: null,
+                email: null,
+                email_verified_at: null,
+                hint: null,
+                id: null,
+                is_active: null,
+                is_login: null,
+                last_login: null,
+                last_reset_at: null,
+                last_reset_by: null,
+                last_session: null,
+                name: null,
+                role_id: null,
+                updated_at: null,
+                username: null,
+            },
+          }
+          dispatch(setAuth(false, dataRev));
+          history.push("/login")
+          break;
+      }
+    })
+  }
+
+
   return (
     <Navbar bg="light" expand="lg">
       <Container fluid>
@@ -195,8 +247,7 @@ function Header() {
             <Nav.Item>
               <Nav.Link
                 className="m-0"
-                href="#pablo"
-                onClick={(e) => e.preventDefault()}
+                onClick={handleLogout}
               >
                 <span className="no-icon">Log out</span>
               </Nav.Link>

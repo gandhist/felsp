@@ -2,8 +2,9 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router";
 import "../../assets/css/login.css";
-import { setFormLogin  } from "./redux";
+import { setFormLogin, setAuth  } from "./redux";
 import { useForm } from "react-hook-form";
+import { BASE_URL } from '../../api';
 
 
 
@@ -15,13 +16,28 @@ const Login = () => {
   
   const stateLogin = useSelector(state => state.LoginReducer);
   const history = useHistory();
-  const { register, handleSubmit, watch, errors,  } = useForm();
+  const { register, handleSubmit, errors,  } = useForm();
   // console.log('watching username : ',watch('username'))
   // console.log('error: ',errors)
-  const handleLogin = (data) => {
+  const handleLogin = async () => {
+    await fetch(`${BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stateLogin)
+      }).then(res => res.json()).then((data) => {
+        let status_code = data.meta.code;
+        switch (status_code) {
+          case 422:
+            alert(data.data.message)
+            break;
+          case 200:
+            localStorage.setItem('p3sAuth', JSON.stringify(data.data))
+            dispatch(setAuth(true, data.data));
+            history.push("/peserta/dashboard")
+            break;
+        }
+      })
     // console.log('ini data dari form',data)
-    // console.log('ini state',stateLogin)
-    history.push("/peserta/dashboard")
   }
 
   // handle on form change
@@ -92,7 +108,8 @@ const Login = () => {
                             name="username"
                             defaultValue={stateLogin.username}
                             onChange={e => handleOnChange(e)}
-                            ref={register({required: true, pattern: /^[a-zA-Z0-9]+@+[a-zA-Z0-9]+.+[A-z]/})}
+                            // ref={register({required: true, pattern: /^[a-zA-Z0-9]+@+[a-zA-Z0-9]+.+[A-z]/})}
+                            ref={register({required: true })}
                           />
                           {errors.username?.type === "required" && 
                           <span className="invalid-feedback">

@@ -4,14 +4,14 @@ import { useHistory } from 'react-router';
 
 const Authenticated = (props) => {
     const auth = useSelector(state => state.AuthReducer);
-    // console.log(auth)
     const history = useHistory();
+    
     useEffect(() => {
         if(!auth.check){
             history.push("/login")
         }
     }, [auth.check])
-    
+
     return props.children;
 }
 

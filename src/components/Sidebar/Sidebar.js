@@ -20,9 +20,9 @@ import { useLocation, NavLink } from "react-router-dom";
 
 import { Nav } from "react-bootstrap";
 
-import logo from "assets/img/reactlogo.png";
-
 function Sidebar({ color, image, routes }) {
+
+  const localAuth = JSON.parse(localStorage.getItem('p3sAuth'));
   const location = useLocation();
   const activeRoute = (routeName) => {
     return location.pathname.indexOf(routeName) > -1 ? "active" : "";
@@ -49,7 +49,7 @@ function Sidebar({ color, image, routes }) {
             </div>
           </a>
           <a className="simple-text" href="http://www.creative-tim.com">
-            Jon Snow
+            {localAuth?.user.username}
           </a>
         </div>
         <Nav>

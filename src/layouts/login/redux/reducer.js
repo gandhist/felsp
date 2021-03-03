@@ -1,13 +1,29 @@
 import { LOGIN, SET_FORM_LOGIN } from "../../../redux/type";
-const local = localStorage.getItem('auth')
-// console.log(local)
+const local = localStorage.getItem('p3sAuth')
+// console.log('ini dari local storage',local)
 // initial state
 const initialAuth = {
-    check : local ? local.token : false,
+    check : local != null ? JSON.parse(local).access_token : false,
     data : {
-        username: null,
-        token: null,
-        role: null,
+        access_token: null,
+        token_type: null,
+        user: {
+            created_at: null,
+            email: null,
+            email_verified_at: null,
+            hint: null,
+            id: null,
+            is_active: null,
+            is_login: null,
+            last_login: null,
+            last_reset_at: null,
+            last_reset_by: null,
+            last_session: null,
+            name: null,
+            role_id: null,
+            updated_at: null,
+            username: null,
+        },
     }
 }
 
