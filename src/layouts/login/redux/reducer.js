@@ -45,6 +45,7 @@ const AuthReducer = (state = initialAuth, action) => {
 
 const initialFormLogin = {
     isLoading: false,
+    isSeePassword: false,
     username : '',
     password : '',
 }

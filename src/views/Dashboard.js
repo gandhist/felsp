@@ -1,9 +1,11 @@
-import React from "react";
+import React, {useState} from "react";
 import ChartistGraph from "react-chartist";
+import NotificationAlert from "react-notification-alert";
 // react-bootstrap components
 import {
   Badge,
   Button,
+  Alert,
   Card,
   Navbar,
   Nav,
@@ -15,12 +17,94 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BASE_URL } from 'api';
+
+
 
 function Dashboard() {
+  const notificationAlertRef = React.useRef(null);
+  const localAuth = JSON.parse(localStorage.getItem('p3sAuth'));
+
+  // state
+  const [isBtnResend, setIsBtnResend] = useState(false);
+
+  // handle resend email verification
+  const handleResendEmailVerifiy = async () => {
+    setIsBtnResend((!isBtnResend))
+    await fetch(`${BASE_URL}/resend`,{
+      method: 'get',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization' : `Bearer ${localAuth.access_token}` },
+    })
+    .then(res => res.json())
+    .then((data) => {
+      console.log(data)
+      //
+      let config = {
+        place : 'br',
+        message : data.meta.message,
+        color : 'info'
+      }
+      notify(config)
+      setIsBtnResend(false)
+    }).catch((err) => {
+      console.error('err resend', err)
+      let config = {
+        place : 'br',
+        message : 'error while sending email verification',
+        color : 'danger'
+      }
+      notify(config)
+      setIsBtnResend(false)
+    })
+    // alert('will resend email verif')
+  }
+
+  // notification
+  const notify = ({place, message, color}) => {
+    var options = {};
+    options = {
+      place: place,
+      message: (
+        <div>
+          <div>
+            {message}
+          </div>
+        </div>
+      ),
+      type: color,
+      icon: "nc-icon nc-bell-55",
+      autoDismiss: 7,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  };
+
   return (
     <>
+      <div className="rna-container">
+        <NotificationAlert ref={notificationAlertRef} />
+      </div>
       <Container fluid>
+        {localAuth?.user.email_verified_at == null ?
         <Row>
+        <Col lg='12' sm='6'>
+              <Alert variant="info">
+                <span>Email belum terverifikasi! </span>
+                {
+                  isBtnResend ?
+                    <button className="btn btn-primary btn-xs" type="button">
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...
+                    </button>
+                  :
+                    <button className="btn btn-primary btn-xs" onClick={handleResendEmailVerifiy} type='button' >kirim ulang</button>
+                }
+              </Alert>
+        </Col>
+      </Row>
+      : ''
+      }
+
+        
+        {/* <Row>
           <Col lg="3" sm="6">
             <Card className="card-stats">
               <Card.Body>
@@ -631,7 +715,7 @@ function Dashboard() {
               </Card.Footer>
             </Card>
           </Col>
-        </Row>
+        </Row> */}
       </Container>
     </>
   );

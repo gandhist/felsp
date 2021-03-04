@@ -22,6 +22,8 @@ import { useHistory } from "react-router";
 import { useDispatch } from "react-redux";
 import { setAuth  } from "../../redux";
 import { BASE_URL } from '../../api';
+import { FaSignOutAlt } from "react-icons/fa";
+
 
 
 import routes from "routes.js";
@@ -141,7 +143,7 @@ function Header() {
                 className="m-0"
               >
                 <i className="nc-icon nc-planet"></i>
-                <span className="notification">5</span>
+                {/* <span className="notification">5</span> */}
                 <span className="d-lg-none ml-1">Notification</span>
               </Dropdown.Toggle>
               <Dropdown.Menu>
@@ -149,9 +151,9 @@ function Header() {
                   href="#pablo"
                   onClick={(e) => e.preventDefault()}
                 >
-                  Notification 1
+                  You have no notifications
                 </Dropdown.Item>
-                <Dropdown.Item
+                {/* <Dropdown.Item
                   href="#pablo"
                   onClick={(e) => e.preventDefault()}
                 >
@@ -174,7 +176,7 @@ function Header() {
                   onClick={(e) => e.preventDefault()}
                 >
                   Another notification
-                </Dropdown.Item>
+                </Dropdown.Item> */}
               </Dropdown.Menu>
             </Dropdown>
             {/* <Nav.Item>
@@ -249,7 +251,7 @@ function Header() {
                 className="m-0"
                 onClick={handleLogout}
               >
-                <span className="no-icon">Log out</span>
+                <span className="no-icon">Log out <FaSignOutAlt /></span>
               </Nav.Link>
             </Nav.Item>
           </Nav>

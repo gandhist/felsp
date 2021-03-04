@@ -41,15 +41,15 @@ function Sidebar({ color, image, routes }) {
             href="https://www.creative-tim.com?ref=lbd-sidebar"
             className="simple-text logo-mini mx-1"
           >
-            <div className="logo-img">
+            <div className="logo-img mr-2">
               <img
                 src={require("assets/img/p3sm.png").default}
                 alt="..."
               />
             </div>
           </a>
-          <a className="simple-text" href="http://www.creative-tim.com">
-            {localAuth?.user.username}
+          <a className="simple-text" href="#">
+            {localAuth?.user.name}
           </a>
         </div>
         <Nav>
