@@ -1,8 +1,8 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from "react-hook-form";
-import { Link } from 'react-router-dom';
-import { setFormRegister } from "./redux";
+import { Link, useHistory } from 'react-router-dom';
+import { setFormRegister, setAuth } from "../../redux/index";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import { BASE_URL } from 'api';
 
@@ -10,6 +10,7 @@ import { BASE_URL } from 'api';
 const Register = () => {
     const dispatch = useDispatch();
     const stateRegister = useSelector(state => state.RegisterReducer);
+    const history = useHistory()
     const { register, handleSubmit, errors} = useForm();
 
     // handle on form change
@@ -34,6 +35,12 @@ const Register = () => {
             // if finished
             switch (status_code) {
                 case 200:
+                    localStorage.setItem('p3sAuth', JSON.stringify(data.data))
+                    dispatch(setAuth(true, data.data));
+                    history.push("/peserta/dashboard")
+                    // 
+                break;
+                case 400:
                     alert(data.meta.message)
                 break;
             }

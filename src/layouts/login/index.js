@@ -8,6 +8,7 @@ import { BASE_URL } from '../../api';
 import { Link } from "react-router-dom";
 import { AiOutlineLogin } from "react-icons/ai";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
+import { DiGithubBadge } from "react-icons/di";
 
 
 
@@ -57,6 +58,23 @@ const Login = () => {
   // handle see password 
   const handleSeePassword = () => {
     dispatch(setFormLogin('isSeePassword', (!stateLogin.isSeePassword)));
+  }
+
+  // handle login socialite
+  const handleOauth = async (e) => {
+    const driver = e.target.name;
+    await fetch(`${BASE_URL}/oauth/${driver}`, {
+      mode: 'no-cors',
+      method: 'GET',
+    headers: { 'Content-Type': 'application/json', 'accept' : 'application/json', "Access-Control-Allow-Credentials": true, }
+    })
+    .then(res => res.json())
+    .then((data) => {
+      console.log(data)
+    })
+    .catch((err) => {
+      console.log('error in handle oauth',err)
+    });
   }
 
 

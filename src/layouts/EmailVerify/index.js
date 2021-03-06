@@ -15,14 +15,12 @@ const EmailVerify = () => {
         })
         .then(res => res.json())
         .then((data) => {
-            console.log(data)
             setIsEmailVerified(true)
         })
         .catch((err) => {
             console.log(err)
         })
     }, [query.expires])
-    console.log(query)
     return (
         <div>
             <nav className="navbar navbar-expand-lg navbar-light navbar-laravel" >

@@ -1,20 +1,96 @@
-import React from "react";
+import { BASE_URL } from "api";
+import React, {useEffect} from "react";
 
 // react-bootstrap components
 import {
-  Badge,
   Button,
   Card,
   Form,
-  Navbar,
-  Nav,
   Container,
   Row,
   Col,
   Table
 } from "react-bootstrap";
+import { useDispatch, useSelector  } from "react-redux";
+import { setFormDataPeserta } from "./redux";
+import Select from "react-select";
+import { FcImageFile } from "react-icons/fc";
 
-function DataPeserta() {
+const DataPeserta = () => {
+
+  const localAuth = JSON.parse(localStorage.getItem('p3sAuth'));
+  const dispatch = useDispatch();
+  const stateDataPeserta = useSelector(state => state.DataPesertaReducer);
+  const jenis_kelamin = [
+    {
+      label: 'Laki-Laki',
+      value: 'L',
+    },
+    {
+      label: 'Perempuan',
+      value: 'P',
+    }
+  ]
+  const options = [
+    { value: 'chocolate', label: 'Chocolate' },
+    { value: 'strawberry', label: 'Strawberry' },
+    { value: 'vanilla', label: 'Vanilla' },
+  ];
+  // console.log(stateDataPeserta)
+  // handle onclick btn simpan
+  const handleOnSubmit = (e) => {
+    e.preventDefault();
+    // console.log(stateDataPeserta)
+    console.log('kirim data')
+  }
+
+  // handle field text change
+  const handleOnChange = (e) => {
+    let type = e.target.type;
+    let name = e.target.name;
+    let value = null;
+    switch (type) {
+      case 'text':
+        value = e.target.value;
+        break;
+      case 'file':
+        value = e.target.files[0];
+        break;
+      case 'select-one':
+        value = e.target.value;
+        break;
+    }
+    dispatch(setFormDataPeserta(name, value))
+  }
+
+  // handle react select on change
+  const handleSelectOnChange = (name, e) => {
+    dispatch(setFormDataPeserta(name, e.value))
+  }
+
+  // use effect get data first
+  useEffect(async () => {
+    const getDataMaster = () => {
+       fetch(`${BASE_URL}/peserta/data/master`,{
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization' : `Bearer ${localAuth.access_token}` },
+      })
+      .then(res => res.json())
+      .then((data) => {
+        const dataPeserta = data.data
+        for (const key in dataPeserta) {
+          dispatch(setFormDataPeserta(key, dataPeserta[key]))
+          // console.log(`${key} : ${dataPeserta[key]}`)
+        }
+        // binding all data to form
+      })
+      .catch((err) => {
+        console.log(err)
+      });
+    }
+    await getDataMaster();
+  }, [])
+
   return (
     <>
       <Container fluid>
@@ -25,13 +101,15 @@ function DataPeserta() {
                 <Card.Title as="h4">Data Peserta</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Form>
+                <Form onSubmit={handleOnSubmit} >
                   <Row>
                     <Col className="pr-1" md="4">
                       <Form.Group>
                         <label>NIK KTP Peserta</label>
                         <Form.Control
-                          defaultValue=""
+                          defaultValue={stateDataPeserta.nik}
+                          name="nik"
+                          onChange={handleOnChange}
                           placeholder="Nomor Induk Kependudukan"
                           type="text"
                         ></Form.Control>
@@ -41,22 +119,25 @@ function DataPeserta() {
                       <Form.Group>
                         <label>Nama Peserta</label>
                         <Form.Control
-                          defaultValue=""
+                          defaultValue={stateDataPeserta.nama}
+                          name="nama"
+                          onChange={handleOnChange}
                           placeholder="Nama Lengkap (Tanpa Gelar)"
                           type="text"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
-                      <Form.Group>
-                        <label htmlFor="exampleInputEmail1">
-                          Jenis Kelamin
-                        </label>
-                        <Form.Control
-                          placeholder=""
-                          type="text"
-                        ></Form.Control>
-                      </Form.Group>
+                    <Form.Group controlId="jenis_kelamin">
+                      <Form.Label>Jenis Kelamin</Form.Label>
+                      <Form.Control as="select" custom name="jenis_kelamin" onChange={handleOnChange} defaultValue={stateDataPeserta.jenis_kelamin}>
+                        {
+                          jenis_kelamin.map((jk, i) => (
+                            <option key={i} value={jk.value} >{jk.label}</option>
+                          ))
+                        }
+                      </Form.Control>
+                    </Form.Group>
                     </Col>
                   </Row>
                   <Row>
@@ -64,7 +145,9 @@ function DataPeserta() {
                       <Form.Group>
                         <label>Tempat Lahir</label>
                         <Form.Control
-                          defaultValue=""
+                          defaultValue={stateDataPeserta.tmp_lahir}
+                          name="tmp_lahir"
+                          onChange={handleOnChange}
                           placeholder="Tempat Lahir"
                           type="text"
                         ></Form.Control>
@@ -74,8 +157,9 @@ function DataPeserta() {
                       <Form.Group>
                         <label>Tanggal lahir</label>
                         <Form.Control
-                          defaultValue=""
-                          placeholder="Nama Lengkap (Tanpa Gelar)"
+                          defaultValue={stateDataPeserta.tgl_lahir}
+                          name="tgl_lahir"
+                          onChange={handleOnChange}
                           type="text"
                         ></Form.Control>
                       </Form.Group>
@@ -86,6 +170,9 @@ function DataPeserta() {
                           NO HP/WA
                         </label>
                         <Form.Control
+                          defaultValue={stateDataPeserta.no_hp}
+                          name="no_hp"
+                          onChange={handleOnChange}
                           placeholder="08xxxx"
                           type="text"
                         ></Form.Control>
@@ -96,21 +183,23 @@ function DataPeserta() {
                     <Col className="pr-1" md="4">
                       <Form.Group>
                         <label>Provinsi (Sesuai KTP)</label>
-                        <Form.Control
-                          defaultValue=""
-                          placeholder="Nomor Induk Kependudukan"
-                          type="text"
-                        ></Form.Control>
+                        <Select
+                          name="prov"
+                          onChange={(e) => handleSelectOnChange('prov', e)}
+                          options={options}
+                          placeholder='Provinsi Sesuai KTP'
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="4">
                       <Form.Group>
                         <label>Kota (Sesuai KTP)</label>
-                        <Form.Control
-                          defaultValue=""
-                          placeholder="Nama Lengkap (Tanpa Gelar)"
-                          type="text"
-                        ></Form.Control>
+                        <Select
+                          name="kota"
+                          onChange={(e) => handleSelectOnChange('prov', e)}
+                          options={options}
+                          placeholder='Kota Sesuai KTP'
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
@@ -119,6 +208,9 @@ function DataPeserta() {
                           Email
                         </label>
                         <Form.Control
+                          defaultValue={stateDataPeserta.email}
+                          name="email"
+                          onChange={handleOnChange}
                           placeholder="Email"
                           type="email"
                         ></Form.Control>
@@ -130,7 +222,9 @@ function DataPeserta() {
                       <Form.Group>
                         <label>Alamat (Sesuai KTP)</label>
                         <Form.Control
-                          defaultValue=""
+                          defaultValue={stateDataPeserta.alamat}
+                          name="alamat"
+                          onChange={handleOnChange}
                           placeholder="Jalan, Kelurahan, Kecamatan"
                           type="text"
                         ></Form.Control>
@@ -140,7 +234,9 @@ function DataPeserta() {
                       <Form.Group>
                         <label>Keterangan</label>
                         <Form.Control
-                          defaultValue=""
+                          name="keterangan"
+                          onChange={handleOnChange}
+                          defaultValue={stateDataPeserta.keterangan}
                           placeholder="(optional)"
                           type="text"
                         ></Form.Control>
@@ -150,12 +246,14 @@ function DataPeserta() {
                   <Row>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>File KTP</label>
+                        <label>File KTP <FcImageFile /> </label>
                         <Form.File 
-                            id="custom-file-translate-scss"
+                            custom
+                            id="custom-file-ktp"
                             label="File KTP"
                             lang="en"
-                            custom
+                            name="f_ktp"
+                            onChange={handleOnChange}
                         />
                         <Form.Text className="text-muted">
                             format: png, jpg, jpeg.
@@ -166,10 +264,12 @@ function DataPeserta() {
                       <Form.Group>
                         <label>File Foto</label>
                         <Form.File 
-                            id=""
+                            custom
+                            id="custom-file-foto"
                             label="File Foto"
                             lang="en"
-                            custom
+                            name="foto"
+                            onChange={handleOnChange}
                         />
                         <Form.Text className="text-muted">
                             format: png, jpg, jpeg.
@@ -180,10 +280,12 @@ function DataPeserta() {
                       <Form.Group>
                         <label>File CV</label>
                         <Form.File 
-                            id=""
+                            custom
+                            id="custom-file-cv"
                             label="File CV"
                             lang="en"
-                            custom
+                            name="f_cv"
+                            onChange={handleOnChange}
                         />
                         <Form.Text className="text-muted">
                             format: png, jpg, jpeg.
@@ -198,6 +300,8 @@ function DataPeserta() {
                             NO NPWP
                             </label>
                             <Form.Control
+                            name="npwp"
+                            onChange={handleOnChange}
                             placeholder="08xxxx"
                             type="text"
                             ></Form.Control>
@@ -207,7 +311,7 @@ function DataPeserta() {
                       <Form.Group>
                         <label>File NPWP</label>
                         <Form.File 
-                            id="custom-file-translate-scss"
+                            id="custom-file-npwp"
                             label="No NPWP"
                             lang="en"
                             custom
@@ -245,6 +349,17 @@ function DataPeserta() {
                         </Form.Text>
                       </Form.Group>
                     </Col>
+                  </Row>
+                  <Row>
+                  <Col md="12">
+                  <Button
+                    className="btn-fill pull-right btn-sm"
+                    type="submit"
+                    variant="info"
+                  >
+                    Simpan
+                  </Button>
+                  </Col>
                   </Row>
                   {/* section data sertifikat */}
                   <Row>
