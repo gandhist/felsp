@@ -63,7 +63,7 @@ const initialStateDataPeserta = {
     nama: null,
     jenis_kelamin: null,
     tmp_lahir: null,
-    tanggal_lahir: null,
+    tgl_lahir: null,
     no_hp: null,
     prov: null,
     kota: null,
@@ -75,16 +75,18 @@ const initialStateDataPeserta = {
     f_cv: null,
     npwp: null,
     f_npwp: null,
-    sertifikat: {
-    },
-    pendidikan: {
-    },
-    pengalaman: {
-    },
-    pelatihan: {
-    },
-    studi_kasus: {
-    }
+    f_pernyataan : null,
+    f_sukes: null,
+    // sertifikat: {
+    // },
+    // pendidikan: {
+    // },
+    // pengalaman: {
+    // },
+    // pelatihan: {
+    // },
+    // studi_kasus: {
+    // }
 }
 
 // reducer
@@ -94,11 +96,11 @@ const DataPesertaReducer = (state = initialStateDataPeserta, action) => {
         return {
             ...state,
             [action.inputType]: action.inputValue,
-            sertifikat: { ...state.sertifikat, ...action.sertifikat },
-            pendidikan: { ...state.pendidikan, ...action.pendidikan },
-            pengalaman: { ...state.pengalaman, ...action.pengalaman },
-            pelataihan: { ...state.pelataihan, ...action.pelataihan },
-            studi_kasus: { ...state.studi_kasus, ...action.studi_kasus },
+            // sertifikat: { ...state.sertifikat, ...action.sertifikat },
+            // pendidikan: { ...state.pendidikan, ...action.pendidikan },
+            // pengalaman: { ...state.pengalaman, ...action.pengalaman },
+            // pelataihan: { ...state.pelataihan, ...action.pelataihan },
+            // studi_kasus: { ...state.studi_kasus, ...action.studi_kasus },
         }
     }
     return state;

@@ -1,5 +1,5 @@
 import { BASE_URL } from "api";
-import React, {useEffect} from "react";
+import React, { useEffect, useState } from "react";
 
 // react-bootstrap components
 import {
@@ -9,17 +9,21 @@ import {
   Container,
   Row,
   Col,
-  Table
+  Table,
+  InputGroup
 } from "react-bootstrap";
-import { useDispatch, useSelector  } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setFormDataPeserta } from "./redux";
 import Select from "react-select";
 import { FcImageFile } from "react-icons/fc";
+import { ModalImage } from "components/Modal";
+import NotificationAlert from "react-notification-alert";
 
 const DataPeserta = () => {
 
   const localAuth = JSON.parse(localStorage.getItem('p3sAuth'));
   const dispatch = useDispatch();
+  const notificationAlertRef = React.useRef(null);
   const stateDataPeserta = useSelector(state => state.DataPesertaReducer);
   const jenis_kelamin = [
     {
@@ -31,17 +35,63 @@ const DataPeserta = () => {
       value: 'P',
     }
   ]
-  const options = [
-    { value: 'chocolate', label: 'Chocolate' },
-    { value: 'strawberry', label: 'Strawberry' },
-    { value: 'vanilla', label: 'Vanilla' },
-  ];
-  // console.log(stateDataPeserta)
+  const [dataProvinsi, setDataProvinsi] = useState([])
+  const [dataKota, setDataKota] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [showModal, setShowModal] = useState({
+    title: null,
+    body: null,
+    show: false
+  });
+  const [defaultProv, setdefaultProv] = useState({})
+  const [defaultKota, setDefaultKota] = useState({})
+// console.log(defaultProv)
   // handle onclick btn simpan
-  const handleOnSubmit = (e) => {
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
-    // console.log(stateDataPeserta)
-    console.log('kirim data')
+    setIsLoading(true)
+    let formData = new FormData();
+    for (const key in stateDataPeserta) {
+      if (key === 'foto' || key === 'f_ktp' || key === 'f_cv' || key === 'f_npwp' || key === 'f_pernyataan' || key === 'f_sukes') {
+        // console.log(`${key}`, typeof stateDataPeserta[key])
+        if (typeof stateDataPeserta[key] === 'object') {
+          if (stateDataPeserta[key]) {
+            formData.append(key, stateDataPeserta[key], stateDataPeserta[key].name);
+          }
+        }
+      }
+      else {
+        formData.append(key, stateDataPeserta[key]);
+      }
+      // console.log(`ini ${key}`, typeof stateDataPeserta[key])
+    }
+    await fetch(`${BASE_URL}/peserta/data/master`, {
+      method: 'POST',
+      body: formData,
+      headers: { 'Authorization': `Bearer ${localAuth.access_token}` },
+    })
+      .then(res => res.json())
+      .then((data) => {
+        // handle success
+        // console.log(data)
+        let config = {
+          place : 'br',
+          message : data.meta.message,
+          color : 'info'
+        }
+        notify(config)
+        setIsLoading(false)
+      })
+      .catch((err) => {
+        console.log(err)
+        let config = {
+          place : 'br',
+          message : 'error while sending data',
+          color : 'danger'
+        }
+        notify(config)
+        setIsLoading(false)
+      })
   }
 
   // handle field text change
@@ -51,6 +101,9 @@ const DataPeserta = () => {
     let value = null;
     switch (type) {
       case 'text':
+        value = e.target.value;
+        break;
+      case 'date':
         value = e.target.value;
         break;
       case 'file':
@@ -65,19 +118,78 @@ const DataPeserta = () => {
 
   // handle react select on change
   const handleSelectOnChange = (name, e) => {
+    // console.log(`${name} : ${e.value} is selected`)
+    if (name === 'prov') {
+      getKotaByProv(e.value)
+    }
     dispatch(setFormDataPeserta(name, e.value))
   }
 
-  // use effect get data first
-  useEffect(async () => {
-    const getDataMaster = () => {
-       fetch(`${BASE_URL}/peserta/data/master`,{
-          method: 'GET',
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization' : `Bearer ${localAuth.access_token}` },
+  // get kota by id provinsi
+  const getKotaByProv = async (idProv) => {
+    fetch(`${BASE_URL}/lov/kota/${idProv}`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${localAuth.access_token}` },
+    })
+      .then(res => res.json())
+      .then((data) => {
+        // push data to array dataProvinis
+        const dt = data.data;
+        let dtTemp = [];
+        for (const key in dt) {
+          let newObj = {
+            'label': dt[key].nama,
+            'value': dt[key].id
+          }
+          dtTemp.push(newObj)
+        }
+        setDataKota(dtTemp)
+        //  return data.data;
       })
+      .catch((err) => {
+        console.log(err)
+      });
+  }
+
+  const getIndex = (idProv) => {
+    return dataProvinsi.filter(op => op.value == idProv);
+    // setDataProvinsi(ar_kota[0])
+  }
+
+  const getProvinsi = async () => {
+    await fetch(`${BASE_URL}/lov/provinsi`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${localAuth.access_token}` },
+    })
+      .then(res => res.json())
+      .then((data) => {
+        // push data to array dataProvinis
+        const dt = data.data;
+        let dtProv = [];
+        for (const key in dt) {
+          let newObj = {
+            'label': dt[key].nama,
+            'value': dt[key].id
+          }
+          dtProv.push(newObj)
+        }
+        setDataProvinsi(dtProv)
+        //  return data.data;
+      })
+      .catch((err) => {
+        console.log(err)
+      });
+  }
+
+  const getDataMaster = async () => {
+    await fetch(`${BASE_URL}/peserta/data/master`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${localAuth.access_token}` },
+    })
       .then(res => res.json())
       .then((data) => {
         const dataPeserta = data.data
+        getKotaByProv(dataPeserta.prov)
         for (const key in dataPeserta) {
           dispatch(setFormDataPeserta(key, dataPeserta[key]))
           // console.log(`${key} : ${dataPeserta[key]}`)
@@ -87,12 +199,39 @@ const DataPeserta = () => {
       .catch((err) => {
         console.log(err)
       });
-    }
-    await getDataMaster();
-  }, [])
+  }
 
+  // notification
+  const notify = ({place, message, color}) => {
+    var options = {};
+    options = {
+      place: place,
+      message: (
+        <div>
+          <div>
+            {message}
+          </div>
+        </div>
+      ),
+      type: color,
+      icon: "nc-icon nc-bell-55",
+      autoDismiss: 7,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  };
+
+
+  // use effect get data first
+  useEffect(() => {
+    getDataMaster();
+    getProvinsi();
+    // console.log(getIndex(17)[0])
+  }, [])
   return (
     <>
+      <div className="rna-container">
+        <NotificationAlert ref={notificationAlertRef} />
+      </div>
       <Container fluid>
         <Row>
           <Col md="12">
@@ -111,6 +250,7 @@ const DataPeserta = () => {
                           name="nik"
                           onChange={handleOnChange}
                           placeholder="Nomor Induk Kependudukan"
+                          disabled={stateDataPeserta.nik ? true : false}
                           type="text"
                         ></Form.Control>
                       </Form.Group>
@@ -128,16 +268,16 @@ const DataPeserta = () => {
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
-                    <Form.Group controlId="jenis_kelamin">
-                      <Form.Label>Jenis Kelamin</Form.Label>
-                      <Form.Control as="select" custom name="jenis_kelamin" onChange={handleOnChange} defaultValue={stateDataPeserta.jenis_kelamin}>
-                        {
-                          jenis_kelamin.map((jk, i) => (
-                            <option key={i} value={jk.value} >{jk.label}</option>
-                          ))
-                        }
-                      </Form.Control>
-                    </Form.Group>
+                      <Form.Group controlId="jenis_kelamin">
+                        <Form.Label>Jenis Kelamin</Form.Label>
+                        <Form.Control as="select" custom name="jenis_kelamin" onChange={handleOnChange} defaultValue={stateDataPeserta.jenis_kelamin}>
+                          {
+                            jenis_kelamin.map((jk, i) => (
+                              <option key={i} value={jk.value} >{jk.label}</option>
+                            ))
+                          }
+                        </Form.Control>
+                      </Form.Group>
                     </Col>
                   </Row>
                   <Row>
@@ -160,7 +300,7 @@ const DataPeserta = () => {
                           defaultValue={stateDataPeserta.tgl_lahir}
                           name="tgl_lahir"
                           onChange={handleOnChange}
-                          type="text"
+                          type="date"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -182,11 +322,17 @@ const DataPeserta = () => {
                   <Row>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>Provinsi (Sesuai KTP)</label>
+                        <label>Provinsi (Sesuai KTP) {stateDataPeserta.prov}</label>
                         <Select
                           name="prov"
+                          // defaultValue={{label: "RIAU", value: 14}}
+                          options={dataProvinsi}
                           onChange={(e) => handleSelectOnChange('prov', e)}
-                          options={options}
+                          // value={stateDataPeserta.prov}
+                          defaultValue={() => {
+                            let a = dataProvinsi.filter(op => op.value == stateDataPeserta.prov)[0]
+                            return {label: a.label, value: a.value}
+                          }}
                           placeholder='Provinsi Sesuai KTP'
                         />
                       </Form.Group>
@@ -196,8 +342,9 @@ const DataPeserta = () => {
                         <label>Kota (Sesuai KTP)</label>
                         <Select
                           name="kota"
-                          onChange={(e) => handleSelectOnChange('prov', e)}
-                          options={options}
+                          onChange={(e) => handleSelectOnChange('kota', e)}
+                          options={dataKota}
+                          defaultValue={() => { dataKota[getIndex(stateDataPeserta.kota)] }}
                           placeholder='Kota Sesuai KTP'
                         />
                       </Form.Group>
@@ -212,7 +359,7 @@ const DataPeserta = () => {
                           name="email"
                           onChange={handleOnChange}
                           placeholder="Email"
-                          type="email"
+                          type="text"
                         ></Form.Control>
                       </Form.Group>
                     </Col>
@@ -222,8 +369,8 @@ const DataPeserta = () => {
                       <Form.Group>
                         <label>Alamat (Sesuai KTP)</label>
                         <Form.Control
-                          defaultValue={stateDataPeserta.alamat}
-                          name="alamat"
+                          defaultValue={stateDataPeserta.alamat_ktp}
+                          name="alamat_ktp"
                           onChange={handleOnChange}
                           placeholder="Jalan, Kelurahan, Kecamatan"
                           type="text"
@@ -246,349 +393,431 @@ const DataPeserta = () => {
                   <Row>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>File KTP <FcImageFile /> </label>
-                        <Form.File 
-                            custom
-                            id="custom-file-ktp"
-                            label="File KTP"
-                            lang="en"
-                            name="f_ktp"
-                            onChange={handleOnChange}
+                        <label>File KTP
+                          {
+                            stateDataPeserta.f_ktp ?
+                              <FcImageFile onClick={() => setShowModal({
+                                ...showModal,
+                                title: `File KTP ${stateDataPeserta.nama}`,
+                                body: stateDataPeserta.f_ktp,
+                                show: true
+                              })} />
+                              :
+                              ''
+                          }
+                        </label>
+                        <Form.File
+                          custom
+                          id="custom-file-ktp"
+                          label="File KTP"
+                          lang="en"
+                          name="f_ktp"
+                          onChange={handleOnChange}
                         />
                         <Form.Text className="text-muted">
-                            format: png, jpg, jpeg.
+                          format: png, jpg, jpeg.
                         </Form.Text>
                       </Form.Group>
                     </Col>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>File Foto</label>
-                        <Form.File 
-                            custom
-                            id="custom-file-foto"
-                            label="File Foto"
-                            lang="en"
-                            name="foto"
-                            onChange={handleOnChange}
+                        <label>File Foto
+                          {
+                            stateDataPeserta.foto ?
+                              <FcImageFile onClick={() => setShowModal({
+                                ...showModal,
+                                title: `File Foto ${stateDataPeserta.nama}`,
+                                body: stateDataPeserta.foto,
+                                show: true
+                              })} />
+                              :
+                              ''
+                          }
+                        </label>
+                        <Form.File
+                          custom
+                          id="custom-file-foto"
+                          label="File Foto"
+                          lang="en"
+                          name="foto"
+                          onChange={handleOnChange}
                         />
                         <Form.Text className="text-muted">
-                            format: png, jpg, jpeg.
+                          format: png, jpg, jpeg.
                         </Form.Text>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
                       <Form.Group>
-                        <label>File CV</label>
-                        <Form.File 
-                            custom
-                            id="custom-file-cv"
-                            label="File CV"
-                            lang="en"
-                            name="f_cv"
-                            onChange={handleOnChange}
+                        <label>File CV
+                          {
+                            stateDataPeserta.f_cv ?
+                              <FcImageFile onClick={() => setShowModal({
+                                ...showModal,
+                                title: `File CV ${stateDataPeserta.nama}`,
+                                body: stateDataPeserta.f_cv,
+                                show: true
+                              })} />
+                              :
+                              ''
+                          }
+                        </label>
+                        <Form.File
+                          custom
+                          id="custom-file-cv"
+                          label="File CV"
+                          lang="en"
+                          name="f_cv"
+                          onChange={handleOnChange}
                         />
                         <Form.Text className="text-muted">
-                            format: png, jpg, jpeg.
+                          format: png, jpg, jpeg.
                         </Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
                   <Row>
-                    <Col className="pr-1" md="2">
+                    <Col className="pr-1" md="4">
+                      <label htmlFor="exampleInputEmail1">
+                        NPWP
+                        {
+                          stateDataPeserta.f_npwp ?
+                            <FcImageFile onClick={() => setShowModal({
+                              ...showModal,
+                              title: `File NPWP ${stateDataPeserta.nama}`,
+                              body: stateDataPeserta.f_npwp,
+                              show: true
+                            })} />
+                            :
+                            ''
+                        }
+                      </label>
+                      <InputGroup size="sm" className="mb-3">
+                        <Form.Control
+                          name="npwp"
+                          onChange={handleOnChange}
+                          placeholder="no Npwp"
+                          defaultValue={stateDataPeserta.npwp}
+                          type="text"
+                        >
+                        </Form.Control>
                         <Form.Group>
-                            <label htmlFor="exampleInputEmail1">
-                            NO NPWP
-                            </label>
-                            <Form.Control
-                            name="npwp"
-                            onChange={handleOnChange}
-                            placeholder="08xxxx"
-                            type="text"
-                            ></Form.Control>
-                        </Form.Group>
-                    </Col>
-                    <Col className="pr-1" md="2">
-                      <Form.Group>
-                        <label>File NPWP</label>
-                        <Form.File 
+                          <Form.File
                             id="custom-file-npwp"
-                            label="No NPWP"
+                            label="Upload NPWP"
+                            name='f_npwp'
+                            onChange={handleOnChange}
                             lang="en"
                             custom
-                        />
-                        <Form.Text className="text-muted">
-                            format: png, jpg, jpeg.
-                        </Form.Text>
-                      </Form.Group>
+                          />
+                        </Form.Group>
+                      </InputGroup>
                     </Col>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>File Pernyataan</label>
-                        <Form.File 
-                            id=""
-                            label="File Surat Pernyataan"
-                            lang="en"
-                            custom
+                        <label>
+                          File Pernyataan
+                        {
+                            stateDataPeserta.f_pernyataan ?
+                              <FcImageFile onClick={() => setShowModal({
+                                ...showModal,
+                                title: `File NPWP ${stateDataPeserta.nama}`,
+                                body: stateDataPeserta.f_pernyataan,
+                                show: true
+                              })} />
+                              :
+                              ''
+                          }
+                        </label>
+                        <Form.File
+                          id=""
+                          label="File Surat Pernyataan"
+                          lang="en"
+                          name='f_pernyataan'
+                          onChange={handleOnChange}
+                          custom
                         />
                         <Form.Text className="text-muted">
-                            format: pdf
+                          format: pdf
                         </Form.Text>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
                       <Form.Group>
-                        <label>File Suket Sehat</label>
-                        <Form.File 
-                            id=""
-                            label="File Suket Sehat"
-                            lang="en"
-                            custom
+                        <label>File Suket Sehat
+                        {
+                            stateDataPeserta.f_sukes ?
+                              <FcImageFile onClick={() => setShowModal({
+                                ...showModal,
+                                title: `File Surat Keterangan Sehat ${stateDataPeserta.nama}`,
+                                body: stateDataPeserta.f_sukes,
+                                show: true
+                              })} />
+                              :
+                              ''
+                          }
+                        </label>
+                        <Form.File
+                          id=""
+                          label="File Suket Sehat"
+                          lang="en"
+                          name='f_sukes'
+                          onChange={handleOnChange}
+                          custom
                         />
                         <Form.Text className="text-muted">
-                            format: pdf
+                          format: pdf
                         </Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
                   <Row>
-                  <Col md="12">
-                  <Button
-                    className="btn-fill pull-right btn-sm"
-                    type="submit"
-                    variant="info"
-                  >
-                    Simpan
-                  </Button>
-                  </Col>
+                    <Col md="12">
+                      {
+                        isLoading ?
+                          <button className="btn-fill btn-info pull-right btn-sm" type="submit">
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...
+                            </button>
+                          :
+                          <Button
+                            className="btn-fill pull-right btn-sm"
+                            type="submit"
+                            variant="info"
+                          >
+                            Simpan
+                          </Button>
+                      }
+
+                    </Col>
                   </Row>
                   {/* section data sertifikat */}
                   <Row>
                     <Col md="12">
-                        <Card className="strpied-tabled-with-hover">
+                      <Card className="strpied-tabled-with-hover">
                         <Card.Header>
-                            <Card.Title as="h4">Data Sertifikat</Card.Title>
+                          <Card.Title as="h4">Data Sertifikat</Card.Title>
                         </Card.Header>
                         <Card.Body className="table-full-width table-responsive px-0">
-                            <Table className="table-hover table-striped">
+                          <Table className="table-hover table-striped">
                             <thead>
-                                <tr>
+                              <tr>
                                 <th className="border-0">ID</th>
                                 <th className="border-0">Name</th>
                                 <th className="border-0">Salary</th>
                                 <th className="border-0">Country</th>
                                 <th className="border-0">City</th>
-                                </tr>
+                              </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                              <tr>
                                 <td>1</td>
                                 <td>Dakota Rice</td>
                                 <td>$36,738</td>
                                 <td>Niger</td>
                                 <td>Oud-Turnhout</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>2</td>
                                 <td>Minerva Hooper</td>
                                 <td>$23,789</td>
                                 <td>Curaçao</td>
                                 <td>Sinaai-Waas</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>3</td>
                                 <td>Sage Rodriguez</td>
                                 <td>$56,142</td>
                                 <td>Netherlands</td>
                                 <td>Baileux</td>
-                                </tr>
+                              </tr>
                             </tbody>
-                            </Table>
+                          </Table>
                         </Card.Body>
-                        </Card>
+                      </Card>
                     </Col>
                   </Row>
                   {/* data pendidikan */}
                   <Row>
                     <Col md="12">
-                        <Card className="strpied-tabled-with-hover">
+                      <Card className="strpied-tabled-with-hover">
                         <Card.Header>
-                            <Card.Title as="h4">Data Pendidikan</Card.Title>
+                          <Card.Title as="h4">Data Pendidikan</Card.Title>
                         </Card.Header>
                         <Card.Body className="table-full-width table-responsive px-0">
-                            <Table className="table-hover table-striped">
+                          <Table className="table-hover table-striped">
                             <thead>
-                                <tr>
+                              <tr>
                                 <th className="border-0">ID</th>
                                 <th className="border-0">Name</th>
                                 <th className="border-0">Salary</th>
                                 <th className="border-0">Country</th>
                                 <th className="border-0">City</th>
-                                </tr>
+                              </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                              <tr>
                                 <td>1</td>
                                 <td>Dakota Rice</td>
                                 <td>$36,738</td>
                                 <td>Niger</td>
                                 <td>Oud-Turnhout</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>2</td>
                                 <td>Minerva Hooper</td>
                                 <td>$23,789</td>
                                 <td>Curaçao</td>
                                 <td>Sinaai-Waas</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>3</td>
                                 <td>Sage Rodriguez</td>
                                 <td>$56,142</td>
                                 <td>Netherlands</td>
                                 <td>Baileux</td>
-                                </tr>
+                              </tr>
                             </tbody>
-                            </Table>
+                          </Table>
                         </Card.Body>
-                        </Card>
+                      </Card>
                     </Col>
                   </Row>
                   {/* data pengalaman */}
                   <Row>
                     <Col md="12">
-                        <Card className="strpied-tabled-with-hover">
+                      <Card className="strpied-tabled-with-hover">
                         <Card.Header>
-                            <Card.Title as="h4">Data Pengalaman</Card.Title>
+                          <Card.Title as="h4">Data Pengalaman</Card.Title>
                         </Card.Header>
                         <Card.Body className="table-full-width table-responsive px-0">
-                            <Table className="table-hover table-striped">
+                          <Table className="table-hover table-striped">
                             <thead>
-                                <tr>
+                              <tr>
                                 <th className="border-0">ID</th>
                                 <th className="border-0">Name</th>
                                 <th className="border-0">Salary</th>
                                 <th className="border-0">Country</th>
                                 <th className="border-0">City</th>
-                                </tr>
+                              </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                              <tr>
                                 <td>1</td>
                                 <td>Dakota Rice</td>
                                 <td>$36,738</td>
                                 <td>Niger</td>
                                 <td>Oud-Turnhout</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>2</td>
                                 <td>Minerva Hooper</td>
                                 <td>$23,789</td>
                                 <td>Curaçao</td>
                                 <td>Sinaai-Waas</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>3</td>
                                 <td>Sage Rodriguez</td>
                                 <td>$56,142</td>
                                 <td>Netherlands</td>
                                 <td>Baileux</td>
-                                </tr>
+                              </tr>
                             </tbody>
-                            </Table>
+                          </Table>
                         </Card.Body>
-                        </Card>
+                      </Card>
                     </Col>
                   </Row>
                   {/* data pelatihan */}
                   <Row>
                     <Col md="12">
-                        <Card className="strpied-tabled-with-hover">
+                      <Card className="strpied-tabled-with-hover">
                         <Card.Header>
-                            <Card.Title as="h4">Data Pelatihan</Card.Title>
+                          <Card.Title as="h4">Data Pelatihan</Card.Title>
                         </Card.Header>
                         <Card.Body className="table-full-width table-responsive px-0">
-                            <Table className="table-hover table-striped">
+                          <Table className="table-hover table-striped">
                             <thead>
-                                <tr>
+                              <tr>
                                 <th className="border-0">ID</th>
                                 <th className="border-0">Name</th>
                                 <th className="border-0">Salary</th>
                                 <th className="border-0">Country</th>
                                 <th className="border-0">City</th>
-                                </tr>
+                              </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                              <tr>
                                 <td>1</td>
                                 <td>Dakota Rice</td>
                                 <td>$36,738</td>
                                 <td>Niger</td>
                                 <td>Oud-Turnhout</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>2</td>
                                 <td>Minerva Hooper</td>
                                 <td>$23,789</td>
                                 <td>Curaçao</td>
                                 <td>Sinaai-Waas</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>3</td>
                                 <td>Sage Rodriguez</td>
                                 <td>$56,142</td>
                                 <td>Netherlands</td>
                                 <td>Baileux</td>
-                                </tr>
+                              </tr>
                             </tbody>
-                            </Table>
+                          </Table>
                         </Card.Body>
-                        </Card>
+                      </Card>
                     </Col>
                   </Row>
                   {/* data studi kasus */}
                   <Row>
                     <Col md="12">
-                        <Card className="strpied-tabled-with-hover">
+                      <Card className="strpied-tabled-with-hover">
                         <Card.Header>
-                            <Card.Title as="h4">Data Studi Kasus</Card.Title>
+                          <Card.Title as="h4">Data Studi Kasus</Card.Title>
                         </Card.Header>
                         <Card.Body className="table-full-width table-responsive px-0">
-                            <Table className="table-hover table-striped">
+                          <Table className="table-hover table-striped">
                             <thead>
-                                <tr>
+                              <tr>
                                 <th className="border-0">ID</th>
                                 <th className="border-0">Name</th>
                                 <th className="border-0">Salary</th>
                                 <th className="border-0">Country</th>
                                 <th className="border-0">City</th>
-                                </tr>
+                              </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                              <tr>
                                 <td>1</td>
                                 <td>Dakota Rice</td>
                                 <td>$36,738</td>
                                 <td>Niger</td>
                                 <td>Oud-Turnhout</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>2</td>
                                 <td>Minerva Hooper</td>
                                 <td>$23,789</td>
                                 <td>Curaçao</td>
                                 <td>Sinaai-Waas</td>
-                                </tr>
-                                <tr>
+                              </tr>
+                              <tr>
                                 <td>3</td>
                                 <td>Sage Rodriguez</td>
                                 <td>$56,142</td>
                                 <td>Netherlands</td>
                                 <td>Baileux</td>
-                                </tr>
+                              </tr>
                             </tbody>
-                            </Table>
+                          </Table>
                         </Card.Body>
-                        </Card>
+                      </Card>
                     </Col>
                   </Row>
 
@@ -688,9 +917,10 @@ const DataPeserta = () => {
               </Card.Body>
             </Card>
           </Col>
-          
+
         </Row>
       </Container>
+      <ModalImage title={showModal.title} body={showModal.body} show={showModal.show} handleClose={() => { setShowModal(!showModal.show) }} />
     </>
   );
 }
