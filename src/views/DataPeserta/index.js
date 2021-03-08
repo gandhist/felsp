@@ -43,8 +43,6 @@ const DataPeserta = () => {
     body: null,
     show: false
   });
-  const [defaultProv, setdefaultProv] = useState({})
-  const [defaultKota, setDefaultKota] = useState({})
 // console.log(defaultProv)
   // handle onclick btn simpan
   const handleOnSubmit = async (e) => {
@@ -151,8 +149,17 @@ const DataPeserta = () => {
       });
   }
 
-  const getIndex = (idProv) => {
-    return dataProvinsi.filter(op => op.value == idProv);
+  const getIndex = (id, obj) => {
+    // return dataProvinsi.filter(op => op.value == idProv);
+    for (const key in obj) {
+      if(obj[key].value == id){
+        // console.log(`ini id prov match`)
+        return key
+        // console.log('here')
+
+        // setdefaultProv(dataProvinsi[key])
+      }
+    }
     // setDataProvinsi(ar_kota[0])
   }
 
@@ -322,17 +329,13 @@ const DataPeserta = () => {
                   <Row>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>Provinsi (Sesuai KTP) {stateDataPeserta.prov}</label>
+                        <label>Provinsi (Sesuai KTP)</label>
                         <Select
                           name="prov"
                           // defaultValue={{label: "RIAU", value: 14}}
                           options={dataProvinsi}
                           onChange={(e) => handleSelectOnChange('prov', e)}
-                          // value={stateDataPeserta.prov}
-                          defaultValue={() => {
-                            let a = dataProvinsi.filter(op => op.value == stateDataPeserta.prov)[0]
-                            return {label: a.label, value: a.value}
-                          }}
+                          value={dataProvinsi[getIndex(stateDataPeserta.prov, dataProvinsi)]}
                           placeholder='Provinsi Sesuai KTP'
                         />
                       </Form.Group>
@@ -344,7 +347,7 @@ const DataPeserta = () => {
                           name="kota"
                           onChange={(e) => handleSelectOnChange('kota', e)}
                           options={dataKota}
-                          defaultValue={() => { dataKota[getIndex(stateDataPeserta.kota)] }}
+                          value={dataKota[getIndex(stateDataPeserta.kota, dataKota)]}
                           placeholder='Kota Sesuai KTP'
                         />
                       </Form.Group>
