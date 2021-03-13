@@ -23,7 +23,7 @@ import Footer from "components/Footer/Footer";
 import Sidebar from "components/Sidebar/Sidebar";
 import FixedPlugin from "components/FixedPlugin/FixedPlugin.js";
 
-import routes from "routes.js";
+import {dashboardRoutes, routes} from "routes.js";
 
 import sidebarImage from "assets/img/sidebar-3.jpg";
 
@@ -33,11 +33,12 @@ function Admin() {
   const [hasImage, setHasImage] = React.useState(true);
   const location = useLocation();
   const mainPanel = React.useRef(null);
-  const getRoutes = (routes) => {
-    return routes.map((prop, key) => {
+  const getRoutes = (dashboardRoutes) => {
+    return dashboardRoutes.map((prop, key) => {
       if (prop.layout === "/peserta") {
         return (
           <Route
+          exact
             path={prop.layout + prop.path}
             render={(props) => <prop.component {...props} />}
             key={key}
@@ -47,6 +48,17 @@ function Admin() {
         return null;
       }
     });
+  };
+  const getOtherRoutes = (routes) => {
+    return routes.map((prop, key) => (
+          <Route
+            exact
+            path={prop.layout + prop.path}
+            render={(props) => <prop.component {...props} />}
+            key={key}
+          />
+        )
+    );
   };
   React.useEffect(() => {
     document.documentElement.scrollTop = 0;
@@ -64,11 +76,15 @@ function Admin() {
   return (
     <>
       <div className="wrapper">
-        <Sidebar color={color} image={hasImage ? image : ""} routes={routes} />
+        <Sidebar color={color} image={hasImage ? image : ""} routes={dashboardRoutes} />
         <div className="main-panel" ref={mainPanel}>
           <AdminNavbar />
           <div className="content">
-            <Switch>{getRoutes(routes)}</Switch>
+            <Switch>
+              {getRoutes(dashboardRoutes)}
+              {/* route */}
+              {getOtherRoutes(routes)}
+            </Switch>
           </div>
           <Footer />
         </div>

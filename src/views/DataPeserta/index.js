@@ -276,8 +276,8 @@ const DataPeserta = () => {
                     </Col>
                     <Col className="pl-1" md="4">
                       <Form.Group controlId="jenis_kelamin">
-                        <Form.Label>Jenis Kelamin</Form.Label>
-                        <Form.Control as="select" custom name="jenis_kelamin" onChange={handleOnChange} defaultValue={stateDataPeserta.jenis_kelamin}>
+                        <Form.Label>Jenis Kelamin </Form.Label>
+                        <Form.Control as="select" custom name="jenis_kelamin" onChange={handleOnChange}  value={stateDataPeserta.jenis_kelamin || '' }>
                           {
                             jenis_kelamin.map((jk, i) => (
                               <option key={i} value={jk.value} >{jk.label}</option>

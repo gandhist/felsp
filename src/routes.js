@@ -18,23 +18,16 @@
 import Dashboard from "views/Dashboard.js";
 import UserProfile from "views/UserProfile.js";
 import DataPeserta from "views/DataPeserta";
+import {BinaList, BinaDetail} from "views/Pembinaan";
 import TableList from "views/TableList.js";
 import Typography from "views/Typography.js";
 import Icons from "views/Icons.js";
 import Maps from "views/Maps.js";
 import Notifications from "views/Notifications.js";
-import Upgrade from "views/Upgrade.js";
 
 
+// sidebar routes
 const dashboardRoutes = [
-  // {
-  //   upgrade: true,
-  //   path: "/upgrade",
-  //   name: "Upgrade to PRO",
-  //   icon: "nc-icon nc-alien-33",
-  //   component: Upgrade,
-  //   layout: "/peserta",
-  // },
   {
     path: "/dashboard",
     name: "Dashboard",
@@ -47,6 +40,13 @@ const dashboardRoutes = [
     name: "Data Peserta",
     icon: "nc-icon nc-notes",
     component: DataPeserta,
+    layout: "/peserta",
+  },
+  {
+    path: "/pembinaan",
+    name: "Pembinaan",
+    icon: "nc-icon nc-notes",
+    component: BinaList,
     layout: "/peserta",
   },
   {
@@ -93,4 +93,14 @@ const dashboardRoutes = [
   },
 ];
 
-export default dashboardRoutes;
+// another routes
+const routes = [
+  {
+    path: "/pembinaan/:id",
+    component: BinaDetail,
+    layout: "/peserta",
+  },
+]
+
+
+export {dashboardRoutes, routes};
