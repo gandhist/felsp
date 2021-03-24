@@ -13,7 +13,7 @@ const initialStatusPeserta = {
         tanggal : null,
     },
     is_quiz_awal : false,
-    is_param_quiz_awal : [],
+    param_quiz_awal : [],
     is_quiz_akhir : false,
     param_quiz_akhir : [],
     is_kuisioner : false,

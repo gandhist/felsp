@@ -96,7 +96,7 @@ const dashboardRoutes = [
 // another routes
 const routes = [
   {
-    path: "/pembinaan/:id",
+    path: "/pembinaan/:id_jadwal",
     component: BinaDetail,
     layout: "/peserta",
   },
